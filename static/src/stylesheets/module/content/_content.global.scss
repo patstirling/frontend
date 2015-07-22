@@ -120,12 +120,6 @@
     &:last-child {
         padding-right: 0;
     }
-
-    .meta__extras--crossword & {
-        @include mq(tablet) {
-            float: right;
-        }
-    }
 }
 
 .meta__save-for-later {
@@ -174,6 +168,14 @@
             border-top: 1px dotted colour(neutral-5);
         }
     }
+
+    .meta__extras--crossword & {
+        @include mq(tablet) {
+            float: right;
+            display: block;
+        }
+    }
+
 }
 
 .meta__number:not(.u-h) + .meta__number {
