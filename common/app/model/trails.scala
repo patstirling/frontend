@@ -1,7 +1,7 @@
 package model
 
 import common.Edition
-import common.dfp.DfpAgent
+import common.dfp.PossibleAdvertisementFeature
 import implicits.Dates
 import org.scala_tools.time.Imports._
 import views.support.CardStyleForFrontend
@@ -9,7 +9,12 @@ import views.support.CardStyleForFrontend
 /**
  * additional information needed to display something on a facia page from CAPI
  */
-trait Trail extends Elements with Tags with FaciaFields with Dates {
+trait Trail
+  extends Elements
+  with Tags
+  with FaciaFields
+  with Dates
+  with PossibleAdvertisementFeature {
   def webPublicationDate: DateTime
   def webPublicationDate(edition: Edition): DateTime = webPublicationDate(edition.timezone)
   def webPublicationDate(zone: DateTimeZone): DateTime = webPublicationDate.withZone(zone)
@@ -36,13 +41,6 @@ trait Trail extends Elements with Tags with FaciaFields with Dates {
   lazy val shouldHidePublicationDate: Boolean = {
     isAdvertisementFeature && webPublicationDate.isOlderThan(2.weeks)
   }
-
-  override def isSponsored(maybeEdition: Option[Edition]): Boolean =
-    DfpAgent.isSponsored(tags, Some(section))
-  override lazy val isAdvertisementFeature: Boolean =
-    DfpAgent.isAdvertisementFeature(tags, Some(section))
-  override lazy val isFoundationSupported: Boolean =
-    DfpAgent.isFoundationSupported(tags, Some(section))
 
   def faciaUrl: Option[String] = this match {
     case snap: Snap => snap.snapHref.filter(_.nonEmpty)

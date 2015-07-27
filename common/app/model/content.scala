@@ -525,7 +525,7 @@ class Article(content: ApiContentWithMeta) extends Content(content) with Lightbo
   override def trailPicture: Option[ImageContainer] = thumbnail.find(_.imageCrops.exists(_.width >= 620))
     .orElse(mainPicture).orElse(videos.headOption)
 
-  override def hasInlineMerchandise = {
+  override lazy val hasInlineMerchandise = {
     isbn.isDefined || super.hasInlineMerchandise
   }
 

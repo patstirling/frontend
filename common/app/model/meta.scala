@@ -1,7 +1,7 @@
 package model
 
-import common.dfp.{AdSize, DfpAgent}
-import common.{Edition, ManifestData, NavItem, Pagination}
+import common.dfp.CommercialMetaData
+import common.{ManifestData, NavItem, Pagination}
 import conf.Configuration
 import model.meta.{Guardian, LinkedData, PotentialAction, WebPage}
 import play.api.libs.json.{JsBoolean, JsString, JsValue}
@@ -9,7 +9,7 @@ import play.api.libs.json.{JsBoolean, JsString, JsValue}
 /**
  * MetaData represents a page on the site, whether facia or content
  */
-trait MetaData extends Tags {
+trait MetaData extends Tags with CommercialMetaData {
   def id: String
   def section: String
   def webTitle: String
@@ -43,18 +43,10 @@ trait MetaData extends Tags {
   lazy val hideUi = false
   lazy val isImmersive = false
 
-  def adUnitSuffix = section
-
-  def hasPageSkin(edition: Edition) = false
-  def sizeOfTakeoverAdsInTopAboveNavSlot(edition: Edition): Seq[AdSize] = Nil
-  def hasAdInBelowTopNavSlot(edition: Edition) = false
-  def omitMPUsFromContainers(edition: Edition) = false
   lazy val isInappropriateForSponsorship: Boolean = false
 
   lazy val membershipAccess: Option[String] = None
   lazy val requiresMembershipAccess: Boolean = false
-
-  def isSurging: Seq[Int] = Seq(0)
 
   def metaData: Map[String, JsValue] = Map(
     ("pageId", JsString(id)),
@@ -108,14 +100,6 @@ trait MetaData extends Tags {
   def cacheSeconds = 60
 
   def customSignPosting: Option[NavItem] = None
-
-  override def isSponsored(maybeEdition: Option[Edition]): Boolean =
-    DfpAgent.isSponsored(tags, Some(section), maybeEdition)
-  override lazy val isFoundationSupported: Boolean = DfpAgent.isFoundationSupported(tags, Some(section))
-  override lazy val isAdvertisementFeature: Boolean = DfpAgent.isAdvertisementFeature(tags, Some(section))
-  lazy val isExpiredAdvertisementFeature: Boolean =
-    DfpAgent.isExpiredAdvertisementFeature(id, tags, Some(section))
-  lazy val sponsorshipTag: Option[Tag] = DfpAgent.sponsorshipTag(tags, Some(section))
 
   def isPreferencesPage = metaData.get("isPreferencesPage").collect{ case prefs: JsBoolean => prefs.value } getOrElse false
 }
@@ -296,26 +280,8 @@ trait Tags {
   lazy val tones: Seq[Tag] = tagsOfType("tone")
   lazy val types: Seq[Tag] = tagsOfType("type")
 
-  def isSponsored(maybeEdition: Option[Edition] = None): Boolean
-  def hasMultipleSponsors: Boolean = DfpAgent.hasMultipleSponsors(tags)
-  def isAdvertisementFeature: Boolean
-  def hasMultipleFeatureAdvertisers: Boolean = DfpAgent.hasMultipleFeatureAdvertisers(tags)
-  def isFoundationSupported: Boolean
-  def hasInlineMerchandise: Boolean = DfpAgent.hasInlineMerchandise(tags)
   lazy val richLink: Option[String] = tags.flatMap(_.richLinkId).headOption
   lazy val openModule: Option[String] = tags.flatMap(_.openModuleId).headOption
-  def sponsor: Option[String] = DfpAgent.getSponsor(tags)
-  def sponsorshipType: Option[String] = {
-    if (isSponsored()) {
-      Option("sponsoredfeatures")
-    } else if (isAdvertisementFeature) {
-      Option("advertisement-features")
-    } else if (isFoundationSupported) {
-      Option("foundation-features")
-    } else {
-      None
-    }
-  }
 
   // Tones are all considered to be 'News' it is the default so we do not list news tones explicitly
   def isNews = !(isLiveBlog || isComment || isFeature)
