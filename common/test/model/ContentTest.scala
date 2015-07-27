@@ -1,11 +1,8 @@
 package model
 
-import common.Edition
-import org.scalatest.FlatSpec
-import org.scalatest.Matchers
-
+import com.gu.contentapi.client.model.{Asset, Content => ApiContent, Element => ApiElement, Tag => ApiTag}
 import org.joda.time.DateTime
-import com.gu.contentapi.client.model.{Asset, Element => ApiElement, Content => ApiContent, Tag => ApiTag}
+import org.scalatest.{FlatSpec, Matchers}
 
 class ContentTest extends FlatSpec with Matchers with implicits.Dates {
   "Trail" should "be populated properly" in {
@@ -56,9 +53,6 @@ class ContentTest extends FlatSpec with Matchers with implicits.Dates {
 
     val tags = new Tags {
       override val tags = theBlogs ++ theTones ++ theContributors ++ theSeries ++ theKeywords ++ theTypes
-      override def isSponsored(maybeEdition: Option[Edition]): Boolean = false
-      override val isFoundationSupported: Boolean = false
-      override val isAdvertisementFeature: Boolean = false
     }
 
     tags.keywords should be(theKeywords)

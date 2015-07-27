@@ -30,8 +30,7 @@ object DfpAgent
   private lazy val tagToAdvertisementFeatureSponsorsMapAgent = AkkaAgent[Map[String, Set[String]]](Map[String, Set[String]]())
   private lazy val inlineMerchandisingTagsAgent = AkkaAgent[InlineMerchandisingTagSet](InlineMerchandisingTagSet())
   private lazy val pageskinnedAdUnitAgent = AkkaAgent[Seq[PageSkinSponsorship]](Nil)
-  private lazy val topAboveNavLineItemAgent = AkkaAgent[Seq[GuLineItem]](Nil)
-  private lazy val topBelowNavLineItemAgent = AkkaAgent[Seq[GuLineItem]](Nil)
+  private lazy val lineItemAgent = AkkaAgent[Map[AdSlot, Seq[GuLineItem]]](Map.empty)
   private lazy val takeoverWithEmptyMPUsAgent = AkkaAgent[Seq[TakeoverWithEmptyMPUs]](Nil)
 
   protected def currentPaidForTags: Seq[PaidForTag] = currentPaidForTagsAgent get()
@@ -40,8 +39,7 @@ object DfpAgent
   protected def tagToAdvertisementFeatureSponsorsMap = tagToAdvertisementFeatureSponsorsMapAgent get()
   protected def inlineMerchandisingTargetedTags: InlineMerchandisingTagSet = inlineMerchandisingTagsAgent get()
   protected def pageSkinSponsorships: Seq[PageSkinSponsorship] = pageskinnedAdUnitAgent get()
-  protected def topAboveNavLineItems: Seq[GuLineItem] = topAboveNavLineItemAgent get()
-  protected def topBelowNavLineItems: Seq[GuLineItem] = topBelowNavLineItemAgent get()
+  protected def lineItemsBySlot: Map[AdSlot, Seq[GuLineItem]] = lineItemAgent get()
   protected def takeoversWithEmptyMPUs: Seq[TakeoverWithEmptyMPUs] =
     takeoverWithEmptyMPUsAgent get()
 
@@ -134,30 +132,38 @@ object DfpAgent
 
     val currentLineItemsFromStore: Seq[GuLineItem] = grabCurrentLineItemsFromStore(dfpLineItemsKey)
 
-    update(topAboveNavLineItemAgent) {
-      currentLineItemsFromStore filter { lineItem =>
-        lineItem.costType == "CPD" &&
-          lineItem.targeting.adUnits.exists { adUnit =>
-            val prefix = adUnit.path.mkString("/").stripSuffix("/ng").stripSuffix("/front")
-            prefix.endsWith("/uk") || prefix.endsWith("/us") || prefix.endsWith("/au")
-          } &&
-          lineItem.targeting.geoTargetsIncluded.exists { geoTarget =>
-            geoTarget.locationType == "COUNTRY" && (
-              geoTarget.name == "United Kingdom" ||
-                geoTarget.name == "United States" ||
-                geoTarget.name == "Australia"
-              )
-          } &&
-          lineItem.creativeSizes.exists { size =>
-            size == leaderboardSize || size == responsiveSize
-          }
-      }
+    def topAboveNavLineItems = currentLineItemsFromStore filter { lineItem =>
+      lineItem.costType == "CPD" &&
+        lineItem.targeting.adUnits.exists { adUnit =>
+          val prefix = adUnit.path.mkString("/").stripSuffix("/ng").stripSuffix("/front")
+          prefix.endsWith("/uk") || prefix.endsWith("/us") || prefix.endsWith("/au")
+        } &&
+        lineItem.targeting.geoTargetsIncluded.exists { geoTarget =>
+          geoTarget.locationType == "COUNTRY" && (
+            geoTarget.name == "United Kingdom" ||
+              geoTarget.name == "United States" ||
+              geoTarget.name == "Australia"
+            )
+        } &&
+        lineItem.creativeSizes.exists { size =>
+          size == leaderboardSize || size == responsiveSize
+        }
     }
 
-    update(topBelowNavLineItemAgent) {
-      currentLineItemsFromStore filter {
-        _.targeting.customTargetSets.exists(_.targets.exists(_.isSlot("top-below-nav")))
+    def topBelowNavLineItems = currentLineItemsFromStore filter {
+      _.targeting.customTargetSets.exists(_.targets.exists(_.isSlot("top-below-nav")))
+    }
+
+    lineItemAgent sendOff { oldData =>
+      if (topAboveNavLineItems.nonEmpty) {
+        oldData + (TopAboveNavSlot -> topAboveNavLineItems) + (TopSlot -> topAboveNavLineItems)
       }
+      else oldData
+    }
+
+    lineItemAgent sendOff { oldData =>
+      if (topBelowNavLineItems.nonEmpty) oldData + (TopBelowNavSlot -> topBelowNavLineItems)
+      else oldData
     }
 
     update(takeoverWithEmptyMPUsAgent)(TakeoverWithEmptyMPUs.fetch())

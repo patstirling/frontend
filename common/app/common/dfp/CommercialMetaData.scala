@@ -52,7 +52,7 @@ trait CommercialMetaData extends PossibleAdvertisementFeature {
 
   def isSurging: Seq[Int] = Seq(0)
 
-  def sizeOfTakeoverAdsInTopAboveNavSlot(edition: Edition): Seq[AdSize] = Nil
+  def sizeOfTakeoverAdsInSlot(slot: AdSlot, edition: Edition): Seq[AdSize] = Nil
 
   def hasAdInBelowTopNavSlot(edition: Edition) = false
 
