@@ -101,6 +101,7 @@ export default {
     imageCdnDomain:        '.guim.co.uk',
     imgIXBasePath:         '/img/static/',
     previewBase:           'http://preview.gutools.co.uk',
+    viewerBase:            'http://viewer.gutools.co.uk',
 
     latestSnapPrefix:      'Latest from ',
 
