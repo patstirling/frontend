@@ -33,6 +33,9 @@ class Crossword extends React.Component {
         this.clueMap = helpers.buildClueMap(this.props.data.entries);
 
         _.bindAll(this,
+            'initStickies',
+            'initStickyClue',
+            'initStickyGrid',
             'onCheat',
             'onSolution',
             'onCheck',
@@ -64,10 +67,40 @@ class Crossword extends React.Component {
     }
 
     componentDidMount () {
-        // Sticky clue
-        const $stickyClueWrapper = $(React.findDOMNode(this.refs.stickyClueWrapper));
+        this.initStickies();
+    }
+
+    componentDidUpdate (prevProps, prevState) {
+        // return focus to active cell after exiting anagram helper
+        if (!this.state.showAnagramHelper && (this.state.showAnagramHelper !== prevState.showAnagramHelper)) {
+            this.focusCurrentCell();
+        }
+    }
+
+    initStickies () {
         const $grid = $(React.findDOMNode(this.refs.grid));
         const $game = $(React.findDOMNode(this.refs.game));
+        const $clues = $(React.findDOMNode(this.refs.clues));
+
+        // Only init sticky clue on mobile width
+        // TODO: check mobile width matches CSS
+        if (detect.isBreakpoint({max: 'mobile'})) {
+            const $stickyClueWrapper = $(React.findDOMNode(this.refs.stickyClueWrapper));
+            this.initStickyClue($stickyClueWrapper, $grid, $game);
+        }
+
+        // Only init stick grid on tablet width if the clues extend below the grid
+        // TODO: Check tablet width matches CSS
+        console.log($grid.offset())
+        console.log($clues.offset())
+        if (detect.isBreakpoint({min: 'tablet'}) && $grid.offset().bottom > $clues.offset().bottom) {
+            this.initStickyGrid($grid, $game);
+        }
+    }
+
+    initStickyClue ($stickyClueWrapper, $grid, $game) {
+        console.log('only on narrow')
+        // Sticky clue
         const isIOS = detect.isIOS();
 
         mediator.on('window:throttledScroll', () => {
@@ -107,11 +140,10 @@ class Crossword extends React.Component {
         });
     }
 
-    componentDidUpdate (prevProps, prevState) {
-        // return focus to active cell after exiting anagram helper
-        if (!this.state.showAnagramHelper && (this.state.showAnagramHelper !== prevState.showAnagramHelper)) {
-            this.focusCurrentCell();
-        }
+    initStickyGrid ($grid, $game) {
+        console.log('only on > tablet and if clue is taller than bottom of grid')
+        console.log($grid)
+        console.log($game)
     }
 
     setCellValue (x, y, value) {
