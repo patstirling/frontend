@@ -91,15 +91,12 @@ class Crossword extends React.Component {
 
         // Only init stick grid on tablet width if the clues extend below the grid
         // TODO: Check tablet width matches CSS
-        console.log($grid.offset())
-        console.log($clues.offset())
         if (detect.isBreakpoint({min: 'tablet'}) && $grid.offset().bottom > $clues.offset().bottom) {
             this.initStickyGrid($grid, $game);
         }
     }
 
     initStickyClue ($stickyClueWrapper, $grid, $game) {
-        console.log('only on narrow')
         // Sticky clue
         const isIOS = detect.isIOS();
 
@@ -140,10 +137,7 @@ class Crossword extends React.Component {
         });
     }
 
-    initStickyGrid ($grid, $game) {
-        console.log('only on > tablet and if clue is taller than bottom of grid')
-        console.log($grid)
-        console.log($game)
+    initStickyGrid () {
     }
 
     setCellValue (x, y, value) {
