@@ -194,15 +194,15 @@ define([
         shouldHideAdSlot = function ($adSlot) {
             return isVisuallyHidden() || isDisabledMobileBanner() || isDisabledCommercialFeature();
 
-            function isVisuallyHidden () {
+            function isVisuallyHidden() {
                 return $css($adSlot, 'display') === 'none';
             }
 
-            function isDisabledMobileBanner () {
+            function isDisabledMobileBanner() {
                 return isMobileBannerTest() && $adSlot.hasClass('ad-slot--top');
             }
 
-            function isDisabledCommercialFeature () {
+            function isDisabledCommercialFeature() {
                 return !commercialFeatures.topBannerAd && $adSlot.attr('name') === 'top-above-nav';
             }
         },
