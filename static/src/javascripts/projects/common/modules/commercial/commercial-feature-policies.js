@@ -45,6 +45,7 @@ define([
     policies.adfreeExperience = function () {
         if (userAdPreference.hideAds) {
             return {
+                topBannerAd : false,
                 articleMPUs : false,
                 sliceAdverts : false,
                 popularContentMPU : false,
@@ -95,6 +96,7 @@ define([
 
     function CommercialFeatureSwitches(enabled) {
         this.dfpAdvertising = enabled;
+        this.topBannerAd = enabled;
         this.articleMPUs = enabled;
         this.sliceAdverts = enabled;
         this.popularContentMPU = enabled;

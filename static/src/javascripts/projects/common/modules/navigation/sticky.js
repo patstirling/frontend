@@ -8,7 +8,8 @@ define([
     'common/utils/detect',
     'common/utils/mediator',
     'common/modules/experiments/ab',
-    'common/modules/ui/smartAppBanner'
+    'common/modules/ui/smartAppBanner',
+    'common/modules/commercial/commercial-features'
 ], function (
     bean,
     qwery,
@@ -19,7 +20,8 @@ define([
     detect,
     mediator,
     ab,
-    smartAppBanner
+    smartAppBanner,
+    commercialFeatures
 ) {
     function StickyHeader() {
         this.breakpoint = detect.getBreakpoint();
@@ -222,7 +224,7 @@ define([
         var bannerHeight = 0,
             scrollY = window.pageYOffset;
 
-        if (!this.isSensitivePage) {
+        if (commercialFeatures.topBannerAd) {
             bannerHeight = this.$els.bannerDesktop.dim().height || 128;
         }
 
