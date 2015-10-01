@@ -203,7 +203,7 @@ define([
             }
 
             function isDisabledCommercialFeature() {
-                return !commercialFeatures.topBannerAd && $adSlot.attr('name') === 'top-above-nav';
+                return !commercialFeatures.topBannerAd && $adSlot.data('name') === 'top-above-nav';
             }
         },
 
