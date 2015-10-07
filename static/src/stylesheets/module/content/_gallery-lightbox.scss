@@ -245,10 +245,14 @@ $gallery-lightbox-sidebar-breakpoint: desktop;
     }
 }
 
-.gallery-lightbox__btn--prev .gallery-lightbox__btn-body {
-    svg {
-        transform: rotate(180deg);
-        padding-left: 2px;
+.gallery-lightbox__btn--prev .gallery-lightbox__btn-body svg  {
+    transform: rotate(180deg);
+    padding-left: 2px;
+}
+
+.gallery-lightbox__btn--info-button .inline-icon {
+    .gallery-lightbox--show-info & {
+        fill: colour(neutral-1);
     }
 }
 
