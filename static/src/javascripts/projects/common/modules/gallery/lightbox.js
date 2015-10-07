@@ -54,23 +54,23 @@ define([
         this.swipeThreshold = 0.05;
 
         // TEMPLATE
-        function generateButtonHTML(label) {
+        function generateButtonHTML(label, iconName) {
             var tmpl = buttonTpl;
-            return template(tmpl, {label: label});
+            return template(tmpl, {label: label, icon: svgs(iconName, ['icon'])});
         }
 
         this.galleryLightboxHtml =
             '<div class="overlay gallery-lightbox gallery-lightbox--closed gallery-lightbox--hover">' +
             '<div class="gallery-lightbox__sidebar">' +
-            generateButtonHTML('close') +
+            generateButtonHTML('close', 'crossIcon') +
             '<div class="gallery-lightbox__progress  gallery-lightbox__progress--sidebar">' +
             '<span class="gallery-lightbox__index js-gallery-index"></span>' +
             '<span class="gallery-lightbox__progress-separator"></span>' +
             '<span class="gallery-lightbox__count js-gallery-count"></span>' +
             '</div>' +
-            generateButtonHTML('next') +
-            generateButtonHTML('prev') +
-            generateButtonHTML('info-button') +
+            generateButtonHTML('next', 'arrowRight') +
+            generateButtonHTML('prev', 'arrowRight') +
+            generateButtonHTML('info-button', 'info') +
             '</div>' +
 
             '<div class="js-gallery-swipe gallery-lightbox__swipe-container">' +

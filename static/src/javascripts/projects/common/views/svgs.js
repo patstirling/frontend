@@ -36,7 +36,8 @@ define([
     'inlineSvg!svgs/commercial/thrasher-benefit-icon-simple',
     'inlineSvg!svgs/commercial/survey-overlay',
     'inlineSvg!svgs/commercial/survey-overlay-simple',
-    'inlineSvg!svgs/commercial/survey-new'
+    'inlineSvg!svgs/commercial/survey-new',
+    'inlineSvg!svgs/icon/info'
 ], function (
     _,
     commentCount16icon,
@@ -71,7 +72,8 @@ define([
     thrasherBenefitSimple,
     surveyOverlay,
     surveyOverlaySimple,
-    surveyNew
+    surveyNew,
+    info
 ) {
     var svgs = {
         commentCount16icon: commentCount16icon,
@@ -91,6 +93,7 @@ define([
         bookmark: bookmark,
         dropdownMask: dropdownMask,
         commentAnchor: commentAnchor,
+        info: info,
         reply: reply,
         expandImage: expandImage,
         cursor: cursor,

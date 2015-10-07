@@ -237,19 +237,21 @@ $gallery-lightbox-sidebar-breakpoint: desktop;
 
 
 .gallery-lightbox__btn--close .gallery-lightbox__btn-body {
-    @include icon-button(close-icon-white, 44px);
+//    @include icon-button(close-icon-white, 44px);
 }
 
 .gallery-lightbox__btn--next .gallery-lightbox__btn-body {
-    @include icon-button(right-arrow, 44px);
+//    @include icon-button(right-arrow, 44px);
 }
 
 .gallery-lightbox__btn--prev .gallery-lightbox__btn-body {
-    @include icon-button(left-arrow, 44px);
+    svg {
+        transform: rotate(180deg);
+    }
 }
 
 .gallery-lightbox__btn--info-button .gallery-lightbox__btn-body {
-    @include icon-button(info-white, 44px);
+//    @include icon-button(info-white, 44px);
 }
 
 
@@ -270,11 +272,19 @@ $gallery-lightbox-sidebar-breakpoint: desktop;
 .gallery-lightbox__btn-body {
     margin: auto;
     background: $c-gallery-lightbox-btn;
+    height: 44px;
+    width: 44px;
     border: 0;
     outline: none;
-    text-indent: -9999px;
+    font-size: 0;
 
     transition: background-color .2s;
+
+    svg {
+        display: block;
+        margin: auto;
+    }
+
     &:focus {
         background-color: lighten($c-gallery-lightbox-btn, 8%);
     }
@@ -292,9 +302,6 @@ $gallery-lightbox-sidebar-breakpoint: desktop;
 
     .gallery-lightbox__btn--info-button .gallery-lightbox__btn-body {
         background: colour(neutral-7);
-        i {
-            @include icon(info-black);
-        }
     }
 
     &.gallery-lightbox--hover .gallery-lightbox__btn--info-button:hover .gallery-lightbox__btn-body {
