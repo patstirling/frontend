@@ -236,22 +236,20 @@ $gallery-lightbox-sidebar-breakpoint: desktop;
 }
 
 
-.gallery-lightbox__btn--close .gallery-lightbox__btn-body {
-//    @include icon-button(close-icon-white, 44px);
-}
-
-.gallery-lightbox__btn--next .gallery-lightbox__btn-body {
-//    @include icon-button(right-arrow, 44px);
+.gallery-lightbox__btn--next .gallery-lightbox__btn-body,
+.gallery-lightbox__btn--prev .gallery-lightbox__btn-body {
+    padding: 0;
+    svg {
+        height: 44px;
+        width: 44px;
+    }
 }
 
 .gallery-lightbox__btn--prev .gallery-lightbox__btn-body {
     svg {
         transform: rotate(180deg);
+        padding-left: 2px;
     }
-}
-
-.gallery-lightbox__btn--info-button .gallery-lightbox__btn-body {
-//    @include icon-button(info-white, 44px);
 }
 
 
