@@ -31,6 +31,20 @@ class DfpDataHydrator extends Logging {
 
         dfpLineItems map { dfpLineItem =>
 
+
+          if (dfpLineItem.getId == 96668127) {
+            println("*3")
+            for (p <- dfpLineItem.getCreativePlaceholders) println(s"${p.getTargetingName} ${
+              p
+                .getSize.getWidth
+            } ${p.getSize.getHeight}")
+            dfpLineItem.getCreativeTargetings.foreach(t => println(s"${t.getName} ${
+              t
+                .getTargeting.getInventoryTargeting.getTargetedAdUnits.head.getAdUnitId
+            }"))
+          }
+
+
           val sponsor = for {
             sponsorFieldId <- optSponsorFieldId
             customFieldValues <- Option(dfpLineItem.getCustomFieldValues)
@@ -95,18 +109,19 @@ class DfpDataHydrator extends Logging {
             id = dfpLineItem.getId,
             name = dfpLineItem.getName,
             startTime = toJodaTime(dfpLineItem.getStartDateTime),
-            endTime = if (dfpLineItem.getUnlimitedEndDateTime) None
-            else Some(toJodaTime(dfpLineItem
-              .getEndDateTime)),
+            endTime = {
+              if (dfpLineItem.getUnlimitedEndDateTime) None
+              else Some(toJodaTime(dfpLineItem.getEndDateTime))
+            },
             isPageSkin = isPageSkin(dfpLineItem),
             sponsor = sponsor,
-            creativeSizes = dfpLineItem.getCreativePlaceholders.map { placeholder =>
-              AdSize(placeholder.getSize.getWidth.toInt, placeholder.getSize.getHeight.toInt)
-            }.toList.sortBy(size => (size.width, size.height)),
-            targeting = GuTargeting(adUnits,
+            creativePlaceholders = buildCreativePlaceholders(dfpLineItem),
+            targeting = GuTargeting(
+              adUnits,
               geoTargetsIncluded,
               geoTargetsExcluded,
-              customTargetSets),
+              customTargetSets
+            ),
             status = dfpLineItem.getStatus.toString,
             costType = dfpLineItem.getCostType.toString,
             lastModified = toJodaTime(dfpLineItem.getLastModifiedDateTime)
@@ -123,6 +138,9 @@ class DfpDataHydrator extends Logging {
   }
 
   def loadCurrentLineItems(): Seq[GuLineItem] = {
+
+    println("*2")
+
     val currentLineItems = new StatementBuilder()
       .where("status = :readyStatus OR status = :deliveringStatus")
       .orderBy("id ASC")
@@ -132,7 +150,7 @@ class DfpDataHydrator extends Logging {
     loadLineItems(currentLineItems)
   }
 
-  def loadLineItemsModifiedSince(threshold:JodaDateTime): Seq[GuLineItem] = {
+  def loadLineItemsModifiedSince(threshold: JodaDateTime): Seq[GuLineItem] = {
     val recentlyModified = new StatementBuilder()
       .where("lastModifiedDateTime > :threshold")
       .withBindVariableValue("threshold", threshold.getMillis)
@@ -203,13 +221,16 @@ class DfpDataHydrator extends Logging {
       val suggestedAdUnits = DfpApiWrapper.fetchSuggestedAdUnits(serviceRegistry, statementBuilder)
 
       val allUnits = suggestedAdUnits.map { adUnit =>
-        val fullpath: List[String] = adUnit.getParentPath.map(_.getName).toList ::: adUnit.getPath.toList
+        val fullpath: List[String] = adUnit.getParentPath.map(_.getName).toList ::: adUnit
+          .getPath.toList
 
         GuAdUnit(adUnit.getId, fullpath.tail)
       }
 
-      allUnits.filter(au => (au.path.last == "ng" || au.path.last == "r2") && au.path.size == 4).sortBy(_.id).distinct
-  }
+      allUnits.filter(au => (au.path.last == "ng" || au.path.last == "r2") && au.path.size == 4)
+        .sortBy(
+          _.id).distinct
+    }
 
   def approveTheseAdUnits(adUnits: Iterable[String]): Try[String] =
     dfpServiceRegistry.map { serviceRegistry =>
@@ -219,7 +240,7 @@ class DfpDataHydrator extends Logging {
         .where(s"id in ($adUnitsList)")
 
       DfpApiWrapper.approveTheseAdUnits(serviceRegistry, statementBuilder)
-  }.getOrElse(Failure(new DfpSessionException()))
+    }.getOrElse(Failure(new DfpSessionException()))
 
 
   def loadActiveUserDefinedCreativeTemplates(threshold: Option[JodaDateTime]):
@@ -309,7 +330,8 @@ class DfpDataHydrator extends Logging {
                                     targetingValues: Map[Long, String]): Seq[CustomTargetSet] = {
 
     def buildTargetSet(crits: CustomCriteriaSet): Option[CustomTargetSet] = {
-      val targets = crits.getChildren.flatMap(crit => buildTarget(crit.asInstanceOf[CustomCriteria]))
+      val targets = crits.getChildren.flatMap(crit => buildTarget(crit
+        .asInstanceOf[CustomCriteria]))
       if (targets.isEmpty) {
         None
       } else {
@@ -319,7 +341,9 @@ class DfpDataHydrator extends Logging {
 
     def buildTarget(crit: CustomCriteria): Option[CustomTarget] = {
       targetingKeys.get(crit.getKeyId) map {
-        keyName => CustomTarget(keyName, crit.getOperator.getValue, buildValueNames(crit.getValueIds))
+        keyName => CustomTarget(keyName,
+          crit.getOperator.getValue,
+          buildValueNames(crit.getValueIds))
       }
     }
 
@@ -333,6 +357,66 @@ class DfpDataHydrator extends Logging {
       buildTargetSet(critSet.asInstanceOf[CustomCriteriaSet])
     }.toSeq
   }
+
+  private def buildTargeting(dfpTargeting: Targeting): GuTargeting = {
+
+    val adUnits: Seq[GuAdUnit] = {
+
+      val allAdUnits = AdUnitAgent.get.data
+      val inventoryTargeting = dfpTargeting.getInventoryTargeting
+
+      val directAdUnits = {
+        for {
+          adUnitTargeting <- toSeq(inventoryTargeting.getTargetedAdUnits)
+          adUnit <- allAdUnits get adUnitTargeting.getAdUnitId
+        } yield adUnit
+      }
+
+      val adUnitsDerivedFromPlacements = {
+        val placementAdUnits = PlacementAgent.get.data
+        for {
+          placementId <- toSeq(inventoryTargeting.getTargetedPlacementIds)
+          adUnitIds <- placementAdUnits get placementId
+          adUnitId <- adUnitIds
+          adUnit <- allAdUnits get adUnitId
+        } yield adUnit
+      }
+
+      (directAdUnits ++ adUnitsDerivedFromPlacements).sortBy(_.path.mkString).distinct
+    }
+
+    // todo: geotargetsinc
+    // todo: geotargetsexc
+    // todo: custom targets
+    GuTargeting(
+      adUnits,
+      geoTargetsIncluded = Nil,
+      geoTargetsExcluded = Nil,
+      customTargetSets = Nil
+    )
+  }
+
+  private def buildCreativePlaceholders(lineItem: LineItem): Seq[GuCreativePlaceholder] = {
+
+    def creativeTargeting(name: String): Option[GuTargeting] = {
+      for (targeting <- toSeq(lineItem.getCreativeTargetings) find (_.getName == name)) yield {
+        buildTargeting(targeting.getTargeting)
+      }
+    }
+
+    val placeholders = for (placeholder <- lineItem.getCreativePlaceholders) yield {
+      val size = placeholder.getSize
+      val targeting = Option(placeholder.getTargetingName).flatMap(creativeTargeting)
+      GuCreativePlaceholder(AdSize(size.getWidth, size.getHeight), targeting)
+    }
+
+    placeholders sortBy { placeholder =>
+      val size = placeholder.size
+      (size.width, size.height)
+    }
+  }
+
+  private def toSeq[A](as: Array[A]): Seq[A] = Option(as) map (_.toSeq) getOrElse Nil
 
   private def toJodaTime(time: DateTime): JodaDateTime = {
     val date = time.getDate
