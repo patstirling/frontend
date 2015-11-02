@@ -1,6 +1,15 @@
 define([
     'react',
-    'common/utils/_',
+    'lodash/functions/compose',
+    'lodash/functions/partialRight',
+    'lodash/collections/contains',
+    'lodash/collections/shuffle',
+    'lodash/collections/filter',
+    'lodash/collections/reduce',
+    'lodash/arrays/rest',
+    'lodash/arrays/first',
+    'lodash/arrays/compact',
+    'lodash/collections/map',
     'common/views/svgs',
     './clue-input',
     './clue-preview',
@@ -8,13 +17,36 @@ define([
     '../helpers'
 ], function (
     React,
-    _,
+    compose,
+    partialRight,
+    contains,
+    shuffle,
+    filter,
+    reduce,
+    rest,
+    first,
+    compact,
+    map,
     svgs,
     ClueInput,
     CluePreview,
     Ring,
-    helpers
-) {
+    helpers) {
+    var flow = function () {
+        var partialFns = map(Array.prototype.slice.apply(arguments), function (call) {
+            var fn = first(call);
+            var args = rest(call);
+            return partialRight.apply(null, [fn].concat(args));
+        });
+        return function () {
+            var args = Array.prototype.slice.apply(arguments);
+            var seedValue = first(partialFns).apply(null, args);
+            return reduce(rest(partialFns), function (acc, fn) {
+                return fn(acc);
+            }, seedValue);
+        };
+    };
+
     var AnagramHelper = React.createClass({
         getInitialState: function () {
             return {
@@ -65,18 +97,17 @@ define([
          * @return {[Object]}          array of shuffled letters
          */
         shuffleWord: function (word, entries) {
-            var wordEntries = _.chain(entries)
-                .map(function (entry) {
+            var wordEntries = flow(
+                [map, function (entry) {
                     return entry.value.toLowerCase();
-                })
-                .filter(function (entry) {
-                    return _.contains(word, entry);
-                })
-                .compact()
-                .value()
-                .sort();
+                }],
+                [filter, function (entry) {
+                    return contains(word, entry);
+                }],
+                [compact]
+            )(entries).sort();
 
-            return _.shuffle(_.reduce(word.trim().split('').sort(), function (acc, letter) {
+            return shuffle(reduce(word.trim().split('').sort(), function (acc, letter) {
                 var entered = acc.entries[0] === letter.toLowerCase();
 
                 return {
@@ -84,7 +115,7 @@ define([
                         value: letter,
                         entered: entered
                     }),
-                    entries: entered ? _.rest(acc.entries) : acc.entries
+                    entries: entered ? rest(acc.entries) : acc.entries
                 };
             }, {
                 letters: [],
@@ -108,7 +139,7 @@ define([
             /* jscs:enable disallowDanglingUnderscores */
             var clue = helpers.getAnagramClueData(this.props.entries, this.props.focussedEntry);
             var cells = helpers.cellsForClue(this.props.entries, this.props.focussedEntry);
-            var entries = _.map(cells, function (coords) {
+            var entries = map(cells, function (coords) {
                 return this.props.grid[coords.x][coords.y];
             }, this);
             var letters = this.shuffleWord(this.state.clueInput, entries);
