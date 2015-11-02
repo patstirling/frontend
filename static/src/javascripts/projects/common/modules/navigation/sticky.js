@@ -3,7 +3,8 @@ define([
     'qwery',
     'fastdom',
     'common/utils/$',
-    'common/utils/_',
+    'lodash/collections/contains',
+    'lodash/functions/bindAll',
     'common/utils/config',
     'common/utils/detect',
     'common/utils/mediator',
@@ -15,14 +16,14 @@ define([
     qwery,
     fastdom,
     $,
-    _,
+    contains,
+    bindAll,
     config,
     detect,
     mediator,
     ab,
     smartAppBanner,
-    commercialFeatures
-) {
+    commercialFeatures) {
     function StickyHeader() {
         this.breakpoint = detect.getBreakpoint();
 
@@ -43,14 +44,14 @@ define([
             firstLoadDepth: 500,
             isNavigationLocked: false
         };
-        this.isMobile = _.contains(this.breakpoint, 'mobile');
-        this.isTablet = _.contains(this.breakpoint, 'tablet');
+        this.isMobile = contains(this.breakpoint, 'mobile');
+        this.isTablet = contains(this.breakpoint, 'tablet');
         this.isAppleCampaign = config.page.hasBelowTopNavSlot;
         this.noTopBanner = !commercialFeatures.topBannerAd;
         this.isProfilePage = config.page.section === 'identity';
         this.isAdblockInUse = detect.adblockInUse();
 
-        _.bindAll(this, 'updatePositionMobile', 'updatePositionAdblock', 'updatePositionApple', 'updatePosition');
+        bindAll(this, 'updatePositionMobile', 'updatePositionAdblock', 'updatePositionApple', 'updatePosition');
     }
 
     StickyHeader.prototype.init = function () {

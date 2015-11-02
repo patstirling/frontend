@@ -11,8 +11,7 @@ define([
     fastdom,
     mediator,
     detect,
-    $
-) {
+    $) {
     var Navigation = {
         init: function () {
             this.jsEnableFooterNav();
