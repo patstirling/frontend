@@ -187,3 +187,6 @@ Location: London, UK
 
 Developer: Matt Osborn
 Location: London, UK
+
+Product Manager: Pat Stirling
+Location: Cambridge, UK
